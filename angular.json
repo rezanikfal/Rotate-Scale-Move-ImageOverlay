@@ -144,6 +144,10 @@
           }
         }
       }
-    }},
-  "defaultProject": "NonGeographic"
+    }
+  },
+  "defaultProject": "NonGeographic",
+  "cli": {
+    "analytics": false
+  }
 }
