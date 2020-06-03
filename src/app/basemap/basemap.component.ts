@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import * as L from 'Leaflet';
+import 'leaflet-imageoverlay-rotated';
 
 @Component({
   selector: 'app-basemap',
@@ -16,13 +17,28 @@ export class BasemapComponent implements OnInit {
     this.map = L.map('map', {
       crs: L.CRS.Simple,
       center: [50, 50],
-      zoom: 15,
+      zoom: 5,
     });
 
-    let imageUrl = 'http://www.lib.utexas.edu/maps/historical/newark_nj_1922.jpg'
-    L.imageOverlay(imageUrl, [[40.712216, -74.22655], [40.773941, -74.12544]],{
-      zIndex:1000
+    // latLng(Y, X) or (lat, lng)
+
+    var bottomright = L.latLng(40, 60),
+      topright = L.latLng(60, 60),
+      bottomleft = L.latLng(40, 46);
+
+    var overlay = L.imageOverlay.rotated("../../assets/images/sample.jpg", bottomright, topright, bottomleft, {
+      interactive: true
     }).addTo(this.map);
+
+    this.map.on('click', (e: any) => {
+      
+      overlay.reposition(L.latLng(61.0636, 47.8428), L.latLng(41.3675, 44.3699), L.latLng(58.6325, 61.6301));
+      console.log(e.overlay);
+    })
+
+
+
+
 
 
   }
