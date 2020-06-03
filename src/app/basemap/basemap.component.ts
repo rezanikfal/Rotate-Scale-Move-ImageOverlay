@@ -31,16 +31,40 @@ export class BasemapComponent implements OnInit {
     }).addTo(this.map);
 
     this.map.on('click', (e: any) => {
-      
+
       overlay.reposition(L.latLng(61.0636, 47.8428), L.latLng(41.3675, 44.3699), L.latLng(58.6325, 61.6301));
-      console.log(e.overlay);
+
+      let A = this.rotationCalculator(300, 40, 60, 60, 60, 40, 46)
+      overlay.reposition(L.latLng(A.newBRY, A.newBRX), L.latLng(A.newTRY, A.newTRX), L.latLng(A.newBLY, A.newBLX));
+
     })
-
-
-
-
-
-
   }
+
+
+  //   X1,Y1 ---------------------------X3,Y3
+  //     |                                |
+  //     |               x                |
+  //     |             Xc,Yc              |
+  //   X4,Y4 ---------------------------X2,Y2
+
+  rotationCalculator(Angle: number, Y2: number, X2: number, Y3: number, X3: number, Y4: number, X4: number) {
+    let Y1 = Y3 - (Y2 - Y4)
+    let X1 = X3 - (X2 - X4)
+
+    let Xc = ((X2 * Y1 - X1 * Y2) * (X4 - X3) - (X4 * Y3 - X3 * Y4) * (X2 - X1)) / ((X2 - X1) * (Y4 - Y3) - (X4 - X3) * (Y2 - Y1))
+    let Yc = ((X2 * Y1 - X1 * Y2) * (Y4 - Y3) - (X4 * Y3 - X3 * Y4) * (Y2 - Y1)) / ((X2 - X1) * (Y4 - Y3) - (X4 - X3) * (Y2 - Y1))
+
+    let AngleRad = Angle * Math.PI / 180
+
+    let XX2 = (X2 - Xc) * Math.cos(AngleRad) - (Y2 - Yc) * Math.sin(AngleRad) + Xc
+    let YY2 = (X2 - Xc) * Math.sin(AngleRad) + (Y2 - Yc) * Math.cos(AngleRad) + Yc
+    let XX3 = (X3 - Xc) * Math.cos(AngleRad) - (Y3 - Yc) * Math.sin(AngleRad) + Xc
+    let YY3 = (X3 - Xc) * Math.sin(AngleRad) + (Y3 - Yc) * Math.cos(AngleRad) + Yc
+    let XX4 = (X4 - Xc) * Math.cos(AngleRad) - (Y4 - Yc) * Math.sin(AngleRad) + Xc
+    let YY4 = (X4 - Xc) * Math.sin(AngleRad) + (Y4 - Yc) * Math.cos(AngleRad) + Yc
+
+    return { newBRX: XX2, newBRY: YY2, newTRX: XX3, newTRY: YY3, newBLX: XX4, newBLY: YY4 }
+  }
+
 
 }
