@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import * as L from 'Leaflet';
+import '../../assets/images/marker-shadow.png'
 import 'leaflet-imageoverlay-rotated';
 
 
@@ -36,8 +37,11 @@ export class BasemapComponent implements OnInit {
   pickCenterActive = false
   pickStartActive = false
   moveImageActive = false
+  pickOriginActive = false
+  scaleImageActive = false
   rotationCenter: L.LatLng
   moveStart: L.LatLng
+  scaleStart: L.LatLng
   overlay: L.ImageOverlay.Rotated
   newBR: L.LatLng = this.imagePosition.BR
   newTR: L.LatLng = this.imagePosition.TR
@@ -86,6 +90,15 @@ export class BasemapComponent implements OnInit {
         this.pickStartActive = false
       }
 
+      if (this.pickOriginActive && !this.scaleImageActive) {
+        this.scaleStart = e.latlng
+        this.scaleImageActive = true
+        this.pickOriginActive = false
+      } else if (!this.pickOriginActive && this.scaleImageActive) {
+        this.scaleImageActive = false
+        this.pickOriginActive = false
+      }
+
       this.imagePositionFinal.BR.lat = this.newBR.lat
       this.imagePositionFinal.BR.lng = this.newBR.lng
       this.imagePositionFinal.TR.lat = this.newTR.lat
@@ -125,11 +138,26 @@ export class BasemapComponent implements OnInit {
 
       }
 
+      if (this.scaleImageActive) {
+
+        let Distance = Math.sqrt(Math.pow(e.latlng.lng - this.scaleStart.lng, 2) + Math.pow(e.latlng.lat - this.scaleStart.lat, 2))
+        let minImageDimention = Math.min(Math.sqrt(Math.pow(this.imagePositionFinal.TR.lng - this.imagePositionFinal.BR.lng, 2) + Math.pow(this.imagePositionFinal.TR.lat - this.imagePositionFinal.BR.lat, 2)), Math.sqrt(Math.pow(this.imagePositionFinal.BL.lng - this.imagePositionFinal.BR.lng, 2) + Math.pow(this.imagePositionFinal.BL.lat - this.imagePositionFinal.BR.lat, 2)))
+        let scalerate = 2 * Distance / minImageDimention
+
+        this.newBR = L.latLng((this.imagePositionFinal.BR.lat-this.imagePositionFinal.C.lat) * scalerate+this.imagePositionFinal.C.lat, (this.imagePositionFinal.BR.lng-this.imagePositionFinal.C.lng) * scalerate+this.imagePositionFinal.C.lng)
+        this.newTR = L.latLng((this.imagePositionFinal.TR.lat-this.imagePositionFinal.C.lat) * scalerate+this.imagePositionFinal.C.lat, (this.imagePositionFinal.TR.lng-this.imagePositionFinal.C.lng) * scalerate+this.imagePositionFinal.C.lng)
+        this.newBL = L.latLng((this.imagePositionFinal.BL.lat-this.imagePositionFinal.C.lat) * scalerate+this.imagePositionFinal.C.lat, (this.imagePositionFinal.BL.lng-this.imagePositionFinal.C.lng) * scalerate+this.imagePositionFinal.C.lng)
+        this.overlay.reposition(L.latLng(this.newBR.lat, this.newBR.lng), L.latLng(this.newTR.lat, this.newTR.lng), L.latLng(this.newBL.lat, this.newBL.lng));
+
+      }
+
     })
 
   }
 
   rotate() {
+    this.pickOriginActive = false
+    this.scaleImageActive = false
     this.pickStartActive = false
     this.moveImageActive = false
     this.pickCenterActive = true
@@ -137,10 +165,21 @@ export class BasemapComponent implements OnInit {
   }
 
   move() {
+    this.pickOriginActive = false
+    this.scaleImageActive = false
     this.rotateImageActive = false
     this.pickCenterActive = false
     this.pickStartActive = true
     this.moveImageActive = false
+  }
+
+  scale() {
+    this.rotateImageActive = false
+    this.pickCenterActive = false
+    this.pickStartActive = false
+    this.moveImageActive = false
+    this.pickOriginActive = true
+    this.scaleImageActive = false
   }
 
 
@@ -152,7 +191,7 @@ export class BasemapComponent implements OnInit {
 
   rotationCalculator(angle: number, Y2: number, X2: number, Y3: number, X3: number, Y4: number, X4: number) {
 
-    let myCenter = this.calcRotationCenter(Y2, X2, Y3, X3, Y4, X4) 
+    let myCenter = this.calcRotationCenter(Y2, X2, Y3, X3, Y4, X4)
 
     let angleRad = angle * Math.PI / 180
 
