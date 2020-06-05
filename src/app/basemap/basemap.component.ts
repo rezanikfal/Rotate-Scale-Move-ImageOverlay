@@ -103,7 +103,7 @@ export class BasemapComponent implements OnInit {
 
       // console.log(e.latlng);
       if (this.rotateImageActive) {
-        let angle = this.rotationAngle(53, 50, e.latlng.lng, e.latlng.lat)
+        let angle = this.rotationAngle(this.imagePositionFinal.C.lng, this.imagePositionFinal.C.lat, e.latlng.lng, e.latlng.lat)
 
         let A = this.rotationCalculator(angle - this.angleOnClick, this.imagePositionFinal.BR.lat, this.imagePositionFinal.BR.lng, this.imagePositionFinal.TR.lat, this.imagePositionFinal.TR.lng, this.imagePositionFinal.BL.lat, this.imagePositionFinal.BL.lng)
         this.newBR = L.latLng(A.newBRY, A.newBRX)
@@ -120,6 +120,7 @@ export class BasemapComponent implements OnInit {
         this.newBR = L.latLng(this.imagePositionFinal.BR.lat + DLat, this.imagePositionFinal.BR.lng + DLng)
         this.newTR = L.latLng(this.imagePositionFinal.TR.lat + DLat, this.imagePositionFinal.TR.lng + DLng)
         this.newBL = L.latLng(this.imagePositionFinal.BL.lat + DLat, this.imagePositionFinal.BL.lng + DLng)
+        this.newC = L.latLng(this.imagePositionFinal.C.lat + DLat, this.imagePositionFinal.C.lng + DLng)
         this.overlay.reposition(L.latLng(this.newBR.lat, this.newBR.lng), L.latLng(this.newTR.lat, this.newTR.lng), L.latLng(this.newBL.lat, this.newBL.lng));
 
       }
