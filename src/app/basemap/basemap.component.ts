@@ -3,10 +3,11 @@ import * as L from 'Leaflet';
 import 'leaflet-imageoverlay-rotated';
 
 
-interface img3Points {
+interface imgControlPoints {
   BR: L.LatLng;
   TR: L.LatLng;
   BL: L.LatLng;
+  C: L.LatLng;
 }
 
 @Component({
@@ -20,14 +21,15 @@ interface img3Points {
 export class BasemapComponent implements OnInit {
 
   constructor() { }
-  imagePosition: img3Points = {
+  imagePosition: imgControlPoints = {
     BR: L.latLng(40, 60),
     TR: L.latLng(60, 60),
-    BL: L.latLng(40, 46)
+    BL: L.latLng(40, 46),
+    C: L.latLng(50, 53)
   }
 
-  imagePositionDynamic: img3Points = this.imagePosition
-  imagePositionFinal: img3Points = this.imagePosition
+  imagePositionDynamic: imgControlPoints = this.imagePosition
+  imagePositionFinal: imgControlPoints = this.imagePosition
 
   map: L.Map
   rotateImageActive = false
@@ -40,6 +42,7 @@ export class BasemapComponent implements OnInit {
   newBR: L.LatLng = this.imagePosition.BR
   newTR: L.LatLng = this.imagePosition.TR
   newBL: L.LatLng = this.imagePosition.BL
+  newC: L.LatLng = this.imagePosition.C
   angleOnClick: number
 
   ngOnInit(): void {
@@ -89,8 +92,10 @@ export class BasemapComponent implements OnInit {
       this.imagePositionFinal.TR.lng = this.newTR.lng
       this.imagePositionFinal.BL.lat = this.newBL.lat
       this.imagePositionFinal.BL.lng = this.newBL.lng
+      this.imagePositionFinal.C.lat = this.newC.lat
+      this.imagePositionFinal.C.lng = this.newC.lng
 
-      this.angleOnClick = this.rotationAngle(53, 50, e.latlng.lng, e.latlng.lat)
+      this.angleOnClick = this.rotationAngle(this.newC.lng, this.newC.lat, e.latlng.lng, e.latlng.lat)
 
     })
 
