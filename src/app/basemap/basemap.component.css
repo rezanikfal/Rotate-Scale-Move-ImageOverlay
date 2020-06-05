@@ -3,3 +3,22 @@
     height: 100vh;
     z-index: 1;
   }
+  .panel {
+    z-index: 100;
+    position: absolute;
+    top: 0px;
+    background: #fff;
+    width: 200px;
+    height: 200px;
+    border-radius: 3px;
+    border-bottom: 1px solid transparent;
+    margin: 20px;
+  }
+  
+  .panel .ckbImage{
+    margin: 20px;
+  }
+  
+  .panel .btnImage{
+    margin: 5px;
+  }
