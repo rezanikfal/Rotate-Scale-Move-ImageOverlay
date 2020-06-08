@@ -65,10 +65,12 @@ export class BasemapComponent implements OnInit {
     this.overlay = L.imageOverlay.rotated("../../assets/images/sample.jpg", this.imagePosition.BR, this.imagePosition.TR, this.imagePosition.BL, {
       interactive: true
     }).addTo(this.map);
+    
+    var myIcon = L.divIcon({className: 'my-div-icon'});
+    L.marker([40, 60], {icon: myIcon}).addTo(this.map);
+    L.marker([60, 60], {icon: myIcon}).addTo(this.map);
+    L.marker([40, 46], {icon: myIcon}).addTo(this.map);
 
-    L.marker([40, 60]).addTo(this.map);
-    L.marker([60, 60]).addTo(this.map);
-    L.marker([40, 46]).addTo(this.map);
 
     this.map.on('click', (e: any) => {
 
@@ -144,9 +146,9 @@ export class BasemapComponent implements OnInit {
         let minImageDimention = Math.min(Math.sqrt(Math.pow(this.imagePositionFinal.TR.lng - this.imagePositionFinal.BR.lng, 2) + Math.pow(this.imagePositionFinal.TR.lat - this.imagePositionFinal.BR.lat, 2)), Math.sqrt(Math.pow(this.imagePositionFinal.BL.lng - this.imagePositionFinal.BR.lng, 2) + Math.pow(this.imagePositionFinal.BL.lat - this.imagePositionFinal.BR.lat, 2)))
         let scalerate = 2 * Distance / minImageDimention
 
-        this.newBR = L.latLng((this.imagePositionFinal.BR.lat-this.imagePositionFinal.C.lat) * scalerate+this.imagePositionFinal.C.lat, (this.imagePositionFinal.BR.lng-this.imagePositionFinal.C.lng) * scalerate+this.imagePositionFinal.C.lng)
-        this.newTR = L.latLng((this.imagePositionFinal.TR.lat-this.imagePositionFinal.C.lat) * scalerate+this.imagePositionFinal.C.lat, (this.imagePositionFinal.TR.lng-this.imagePositionFinal.C.lng) * scalerate+this.imagePositionFinal.C.lng)
-        this.newBL = L.latLng((this.imagePositionFinal.BL.lat-this.imagePositionFinal.C.lat) * scalerate+this.imagePositionFinal.C.lat, (this.imagePositionFinal.BL.lng-this.imagePositionFinal.C.lng) * scalerate+this.imagePositionFinal.C.lng)
+        this.newBR = L.latLng((this.imagePositionFinal.BR.lat - this.imagePositionFinal.C.lat) * scalerate + this.imagePositionFinal.C.lat, (this.imagePositionFinal.BR.lng - this.imagePositionFinal.C.lng) * scalerate + this.imagePositionFinal.C.lng)
+        this.newTR = L.latLng((this.imagePositionFinal.TR.lat - this.imagePositionFinal.C.lat) * scalerate + this.imagePositionFinal.C.lat, (this.imagePositionFinal.TR.lng - this.imagePositionFinal.C.lng) * scalerate + this.imagePositionFinal.C.lng)
+        this.newBL = L.latLng((this.imagePositionFinal.BL.lat - this.imagePositionFinal.C.lat) * scalerate + this.imagePositionFinal.C.lat, (this.imagePositionFinal.BL.lng - this.imagePositionFinal.C.lng) * scalerate + this.imagePositionFinal.C.lng)
         this.overlay.reposition(L.latLng(this.newBR.lat, this.newBR.lng), L.latLng(this.newTR.lat, this.newTR.lng), L.latLng(this.newBL.lat, this.newBL.lng));
 
       }

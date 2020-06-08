@@ -22,3 +22,10 @@
   .panel .btnImage{
     margin: 5px;
   }
+
+  .my-div-icon {
+    width: 25px;
+    height:25px;
+    background: red;
+    border: 3px dotted black;
+  }

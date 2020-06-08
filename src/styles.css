@@ -7,3 +7,10 @@ body {
   margin: 0;
   font-family: Roboto, "Helvetica Neue", sans-serif;
 }
+
+.my-div-icon {
+  width: 25px;
+  height:25px;
+  background: red;
+  border: 1px solid white;
+}
