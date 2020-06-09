@@ -48,6 +48,8 @@ export class BasemapComponent implements OnInit {
   newBL: L.LatLng = this.imagePosition.BL
   newC: L.LatLng = this.imagePosition.C
   angleOnClick: number
+  myUrl: string
+  locatingMap = false
 
   ngOnInit(): void {
     this.map = L.map('map', {
@@ -62,14 +64,15 @@ export class BasemapComponent implements OnInit {
     //   topright = L.latLng(60, 60),
     //   bottomleft = L.latLng(40, 46);
 
-    this.overlay = L.imageOverlay.rotated("../../assets/images/sample.jpg", this.imagePosition.BR, this.imagePosition.TR, this.imagePosition.BL, {
-      interactive: true
-    }).addTo(this.map);
-    
-    var myIcon = L.divIcon({className: 'my-div-icon'});
-    L.marker([40, 60], {icon: myIcon}).addTo(this.map);
-    L.marker([60, 60], {icon: myIcon}).addTo(this.map);
-    L.marker([40, 46], {icon: myIcon}).addTo(this.map);
+
+    // this.overlay = L.imageOverlay.rotated("../../assets/images/sample.jpg", this.imagePosition.BR, this.imagePosition.TR, this.imagePosition.BL, {
+    //   interactive: true
+    // }).addTo(this.map);
+
+    var myIcon = L.divIcon({ className: 'my-div-icon' });
+    L.marker([40, 60], { icon: myIcon }).addTo(this.map);
+    L.marker([60, 60], { icon: myIcon }).addTo(this.map);
+    L.marker([40, 46], { icon: myIcon }).addTo(this.map);
 
 
     this.map.on('click', (e: any) => {
@@ -183,6 +186,33 @@ export class BasemapComponent implements OnInit {
     this.pickOriginActive = true
     this.scaleImageActive = false
   }
+
+  locate() {
+    this.locatingMap = !this.locatingMap
+    document.getElementById('map').style.cursor = 'crosshair'
+  }
+
+  LoadImage(e) {
+    let file = e.target.files[0]
+    let fileReader = new FileReader()
+    fileReader.readAsDataURL(file)
+
+    fileReader.onload = (e) => {
+      let image = new Image()
+      image.src = e.target.result.toString()
+      image.onload=()=>{
+        this.locate()
+        console.log(image.width);
+        console.log(image.height);
+
+        this.overlay = L.imageOverlay.rotated(image.src, this.imagePosition.BR, this.imagePosition.TR, this.imagePosition.BL, {
+          interactive: true
+        }).addTo(this.map);
+      }
+    }
+  }
+
+
 
 
   //   X1,Y1 ---------------------------X3,Y3
