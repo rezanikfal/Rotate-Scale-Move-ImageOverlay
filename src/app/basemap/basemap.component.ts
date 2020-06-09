@@ -5,7 +5,7 @@ import 'leaflet-imageoverlay-rotated';
 
 
 interface imgControlPoints {
-  BR: L.LatLng;
+  TL: L.LatLng;
   TR: L.LatLng;
   BL: L.LatLng;
   C: L.LatLng;
@@ -22,12 +22,7 @@ interface imgControlPoints {
 export class BasemapComponent implements OnInit {
 
   constructor() { }
-  imagePosition: imgControlPoints = {
-    BR: L.latLng(40, 60),
-    TR: L.latLng(60, 60),
-    BL: L.latLng(40, 46),
-    C: L.latLng(50, 53)
-  }
+  imagePosition: imgControlPoints = { TL: new L.LatLng(0, 0), TR: new L.LatLng(0, 0), BL: new L.LatLng(0, 0), C: new L.LatLng(0, 0) }
 
   imagePositionDynamic: imgControlPoints = this.imagePosition
   imagePositionFinal: imgControlPoints = this.imagePosition
@@ -43,13 +38,16 @@ export class BasemapComponent implements OnInit {
   moveStart: L.LatLng
   scaleStart: L.LatLng
   overlay: L.ImageOverlay.Rotated
-  newBR: L.LatLng = this.imagePosition.BR
-  newTR: L.LatLng = this.imagePosition.TR
-  newBL: L.LatLng = this.imagePosition.BL
-  newC: L.LatLng = this.imagePosition.C
+  newTL: L.LatLng
+  newTR: L.LatLng
+  newBL: L.LatLng
+  newC: L.LatLng
   angleOnClick: number
   myUrl: string
   locatingMap = false
+  imageWidth: number
+  imageHeight: number
+  imageSRC: string
 
   ngOnInit(): void {
     this.map = L.map('map', {
@@ -65,7 +63,7 @@ export class BasemapComponent implements OnInit {
     //   bottomleft = L.latLng(40, 46);
 
 
-    // this.overlay = L.imageOverlay.rotated("../../assets/images/sample.jpg", this.imagePosition.BR, this.imagePosition.TR, this.imagePosition.BL, {
+    // this.overlay = L.imageOverlay.rotated("../../assets/images/sample.jpg", this.imagePosition.TL, this.imagePosition.TR, this.imagePosition.BL, {
     //   interactive: true
     // }).addTo(this.map);
 
@@ -77,57 +75,73 @@ export class BasemapComponent implements OnInit {
 
     this.map.on('click', (e: any) => {
 
-      if (this.pickCenterActive && !this.rotateImageActive) {
-        this.rotationCenter = e.latlng
-        this.rotateImageActive = true
-        this.pickCenterActive = false
-      } else if (!this.pickCenterActive && this.rotateImageActive) {
-        this.rotateImageActive = false
-        this.pickCenterActive = false
-      }
+      if (this.locatingMap) {
+        this.locatingMap = false
+        document.getElementById('map').style.cursor = 'default'
+        this.imagePosition = {
+          TL: L.latLng(e.latlng.lat + this.imageHeight / 20, e.latlng.lng - this.imageWidth / 20),
+          TR: L.latLng(e.latlng.lat + this.imageHeight / 20, e.latlng.lng + this.imageWidth / 20),
+          BL: L.latLng(e.latlng.lat - this.imageHeight / 20, e.latlng.lng - this.imageWidth / 20),
+          C: L.latLng(e.latlng.lat, e.latlng.lng)
+        }
+        this.newTL = this.imagePosition.TL
+        this.newTR = this.imagePosition.TR
+        this.newBL = this.imagePosition.BL
+        this.newC = this.imagePosition.C
 
-      if (this.pickStartActive && !this.moveImageActive) {
-        this.moveStart = e.latlng
-        this.moveImageActive = true
-        this.pickStartActive = false
-      } else if (!this.pickStartActive && this.moveImageActive) {
-        this.moveImageActive = false
-        this.pickStartActive = false
-      }
+        this.overlay = L.imageOverlay.rotated(this.imageSRC, this.imagePosition.TL, this.imagePosition.TR, this.imagePosition.BL, {
+          interactive: true
+        }).addTo(this.map);
 
-      if (this.pickOriginActive && !this.scaleImageActive) {
         this.scaleStart = e.latlng
         this.scaleImageActive = true
         this.pickOriginActive = false
-      } else if (!this.pickOriginActive && this.scaleImageActive) {
-        this.scaleImageActive = false
-        this.pickOriginActive = false
-      }
+      } else {
+        if (this.pickCenterActive && !this.rotateImageActive) {
+          this.rotationCenter = e.latlng
+          this.rotateImageActive = true
+          this.pickCenterActive = false
+        } else if (!this.pickCenterActive && this.rotateImageActive) {
+          this.rotateImageActive = false
+          this.pickCenterActive = false
+        }
 
-      this.imagePositionFinal.BR.lat = this.newBR.lat
-      this.imagePositionFinal.BR.lng = this.newBR.lng
-      this.imagePositionFinal.TR.lat = this.newTR.lat
-      this.imagePositionFinal.TR.lng = this.newTR.lng
-      this.imagePositionFinal.BL.lat = this.newBL.lat
-      this.imagePositionFinal.BL.lng = this.newBL.lng
-      this.imagePositionFinal.C.lat = this.newC.lat
-      this.imagePositionFinal.C.lng = this.newC.lng
+        if (this.pickStartActive && !this.moveImageActive) {
+          this.moveStart = e.latlng
+          this.moveImageActive = true
+          this.pickStartActive = false
+        } else if (!this.pickStartActive && this.moveImageActive) {
+          this.moveImageActive = false
+          this.pickStartActive = false
+        }
+
+        if (this.pickOriginActive && !this.scaleImageActive) {
+          this.scaleStart = e.latlng
+          this.scaleImageActive = true
+          this.pickOriginActive = false
+        } else if (!this.pickOriginActive && this.scaleImageActive) {
+          this.scaleImageActive = false
+          this.pickOriginActive = false
+        }
+      }
+      this.imagePositionFinal.TL = this.newTL
+      this.imagePositionFinal.TR = this.newTR
+      this.imagePositionFinal.BL = this.newBL
+      this.imagePositionFinal.C = this.newC
 
       this.angleOnClick = this.rotationAngle(this.newC.lng, this.newC.lat, e.latlng.lng, e.latlng.lat)
-
     })
 
     this.map.on('mousemove', (e: any) => {
 
-      // console.log(e.latlng);
       if (this.rotateImageActive) {
-        let angle = this.rotationAngle(this.imagePositionFinal.C.lng, this.imagePositionFinal.C.lat, e.latlng.lng, e.latlng.lat)
+        let angle = this.rotationAngle(this.newC.lng, this.newC.lat, e.latlng.lng, e.latlng.lat)
 
-        let A = this.rotationCalculator(angle - this.angleOnClick, this.imagePositionFinal.BR.lat, this.imagePositionFinal.BR.lng, this.imagePositionFinal.TR.lat, this.imagePositionFinal.TR.lng, this.imagePositionFinal.BL.lat, this.imagePositionFinal.BL.lng)
-        this.newBR = L.latLng(A.newBRY, A.newBRX)
+        let A = this.rotationCalculator(angle - this.angleOnClick, this.imagePositionFinal.TL.lat, this.imagePositionFinal.TL.lng, this.imagePositionFinal.TR.lat, this.imagePositionFinal.TR.lng, this.imagePositionFinal.BL.lat, this.imagePositionFinal.BL.lng)
+        this.newTL = L.latLng(A.newTLY, A.newTLX)
         this.newTR = L.latLng(A.newTRY, A.newTRX)
         this.newBL = L.latLng(A.newBLY, A.newBLX)
-        this.overlay.reposition(L.latLng(A.newBRY, A.newBRX), L.latLng(A.newTRY, A.newTRX), L.latLng(A.newBLY, A.newBLX));
+        this.overlay.reposition(L.latLng(A.newTLY, A.newTLX), L.latLng(A.newTRY, A.newTRX), L.latLng(A.newBLY, A.newBLX));
       }
 
       if (this.moveImageActive) {
@@ -135,24 +149,23 @@ export class BasemapComponent implements OnInit {
         let DLat = e.latlng.lat - this.moveStart.lat
         let DLng = e.latlng.lng - this.moveStart.lng
 
-        this.newBR = L.latLng(this.imagePositionFinal.BR.lat + DLat, this.imagePositionFinal.BR.lng + DLng)
+        this.newTL = L.latLng(this.imagePositionFinal.TL.lat + DLat, this.imagePositionFinal.TL.lng + DLng)
         this.newTR = L.latLng(this.imagePositionFinal.TR.lat + DLat, this.imagePositionFinal.TR.lng + DLng)
         this.newBL = L.latLng(this.imagePositionFinal.BL.lat + DLat, this.imagePositionFinal.BL.lng + DLng)
         this.newC = L.latLng(this.imagePositionFinal.C.lat + DLat, this.imagePositionFinal.C.lng + DLng)
-        this.overlay.reposition(L.latLng(this.newBR.lat, this.newBR.lng), L.latLng(this.newTR.lat, this.newTR.lng), L.latLng(this.newBL.lat, this.newBL.lng));
+        this.overlay.reposition(L.latLng(this.newTL.lat, this.newTL.lng), L.latLng(this.newTR.lat, this.newTR.lng), L.latLng(this.newBL.lat, this.newBL.lng));
 
       }
 
       if (this.scaleImageActive) {
-
         let Distance = Math.sqrt(Math.pow(e.latlng.lng - this.scaleStart.lng, 2) + Math.pow(e.latlng.lat - this.scaleStart.lat, 2))
-        let minImageDimention = Math.min(Math.sqrt(Math.pow(this.imagePositionFinal.TR.lng - this.imagePositionFinal.BR.lng, 2) + Math.pow(this.imagePositionFinal.TR.lat - this.imagePositionFinal.BR.lat, 2)), Math.sqrt(Math.pow(this.imagePositionFinal.BL.lng - this.imagePositionFinal.BR.lng, 2) + Math.pow(this.imagePositionFinal.BL.lat - this.imagePositionFinal.BR.lat, 2)))
+        let minImageDimention = Math.min(Math.sqrt(Math.pow(this.imagePositionFinal.TR.lng - this.imagePositionFinal.TL.lng, 2) + Math.pow(this.imagePositionFinal.TR.lat - this.imagePositionFinal.TL.lat, 2)), Math.sqrt(Math.pow(this.imagePositionFinal.BL.lng - this.imagePositionFinal.TL.lng, 2) + Math.pow(this.imagePositionFinal.BL.lat - this.imagePositionFinal.TL.lat, 2)))
         let scalerate = 2 * Distance / minImageDimention
 
-        this.newBR = L.latLng((this.imagePositionFinal.BR.lat - this.imagePositionFinal.C.lat) * scalerate + this.imagePositionFinal.C.lat, (this.imagePositionFinal.BR.lng - this.imagePositionFinal.C.lng) * scalerate + this.imagePositionFinal.C.lng)
+        this.newTL = L.latLng((this.imagePositionFinal.TL.lat - this.imagePositionFinal.C.lat) * scalerate + this.imagePositionFinal.C.lat, (this.imagePositionFinal.TL.lng - this.imagePositionFinal.C.lng) * scalerate + this.imagePositionFinal.C.lng)
         this.newTR = L.latLng((this.imagePositionFinal.TR.lat - this.imagePositionFinal.C.lat) * scalerate + this.imagePositionFinal.C.lat, (this.imagePositionFinal.TR.lng - this.imagePositionFinal.C.lng) * scalerate + this.imagePositionFinal.C.lng)
         this.newBL = L.latLng((this.imagePositionFinal.BL.lat - this.imagePositionFinal.C.lat) * scalerate + this.imagePositionFinal.C.lat, (this.imagePositionFinal.BL.lng - this.imagePositionFinal.C.lng) * scalerate + this.imagePositionFinal.C.lng)
-        this.overlay.reposition(L.latLng(this.newBR.lat, this.newBR.lng), L.latLng(this.newTR.lat, this.newTR.lng), L.latLng(this.newBL.lat, this.newBL.lng));
+        this.overlay.reposition(L.latLng(this.newTL.lat, this.newTL.lng), L.latLng(this.newTR.lat, this.newTR.lng), L.latLng(this.newBL.lat, this.newBL.lng));
 
       }
 
@@ -199,15 +212,11 @@ export class BasemapComponent implements OnInit {
 
     fileReader.onload = (e) => {
       let image = new Image()
-      image.src = e.target.result.toString()
-      image.onload=()=>{
+      this.imageSRC = image.src = e.target.result.toString()
+      image.onload = () => {
+        this.imageWidth = image.width
+        this.imageHeight = image.height
         this.locate()
-        console.log(image.width);
-        console.log(image.height);
-
-        this.overlay = L.imageOverlay.rotated(image.src, this.imagePosition.BR, this.imagePosition.TR, this.imagePosition.BL, {
-          interactive: true
-        }).addTo(this.map);
       }
     }
   }
@@ -236,7 +245,7 @@ export class BasemapComponent implements OnInit {
     let XX4 = (X4 - myCenter.Xc) * Math.cos(angleRad) - (Y4 - myCenter.Yc) * Math.sin(angleRad) + myCenter.Xc
     let YY4 = (X4 - myCenter.Xc) * Math.sin(angleRad) + (Y4 - myCenter.Yc) * Math.cos(angleRad) + myCenter.Yc
 
-    return { newBRX: XX2, newBRY: YY2, newTRX: XX3, newTRY: YY3, newBLX: XX4, newBLY: YY4, centerX: myCenter.Xc, centerY: myCenter.Yc }
+    return { newTLX: XX2, newTLY: YY2, newTRX: XX3, newTRY: YY3, newBLX: XX4, newBLY: YY4, centerX: myCenter.Xc, centerY: myCenter.Yc }
   }
 
   rotationAngle(Xc: number, Yc: number, X: number, Y: number) {
