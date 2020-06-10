@@ -2,6 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import * as L from 'Leaflet';
 import '../../assets/images/marker-shadow.png'
 import 'leaflet-imageoverlay-rotated';
+import { LoadDataService } from '../load-data.service';
+
 
 
 interface imgControlPoints {
@@ -21,7 +23,7 @@ interface imgControlPoints {
 
 export class BasemapComponent implements OnInit {
 
-  constructor() { }
+  constructor(private cartesianData: LoadDataService) { }
   imagePosition: imgControlPoints = { TL: new L.LatLng(0, 0), TR: new L.LatLng(0, 0), BL: new L.LatLng(0, 0), C: new L.LatLng(0, 0) }
 
   imagePositionDynamic: imgControlPoints = this.imagePosition
@@ -48,14 +50,23 @@ export class BasemapComponent implements OnInit {
   imageWidth: number
   imageHeight: number
   imageSRC: string
+  featureLayer: L.GeoJSON
 
   ngOnInit(): void {
     this.map = L.map('map', {
       crs: L.CRS.Simple,
-      center: [50, 50],
+      center: [10067135, 3112219],
       zoomControl: false,
-      zoom: 5,
+      zoom: 1,
     });
+
+    this.cartesianData.loadData().subscribe((res) => {
+      this.featureLayer = L.geoJSON(res, {
+        pointToLayer: function (geoJsonPoint, latlng) {
+          return L.marker(latlng);
+        }
+      }).addTo(this.map);
+    })
 
     // latLng(Y, X) or (lat, lng)
     // var bottomright = L.latLng(40, 60),
