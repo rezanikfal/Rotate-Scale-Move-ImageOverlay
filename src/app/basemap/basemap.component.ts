@@ -36,6 +36,8 @@ export class BasemapComponent implements OnInit {
   moveImageActive = false
   pickOriginActive = false
   scaleImageActive = false
+  distanceMeasureing = false
+  ImageAdded = false
   rotationCenter: L.LatLng
   moveStart: L.LatLng
   scaleStart: L.LatLng
@@ -51,6 +53,23 @@ export class BasemapComponent implements OnInit {
   imageHeight: number
   imageSRC: string
   featureLayer: L.GeoJSON
+  pointsGroup = L.layerGroup()
+  pLineGroup = L.layerGroup()
+  lineGroup: any[] = []
+  polyline: L.Polyline
+  smallPolyline: L.Polyline
+  startingPoint: L.LatLng
+  endingPoint: L.LatLng
+  totalDistance = 0
+
+  pointStyle = {
+    radius: 3,
+    color: "#000",
+    weight: 1,
+    opacity: 1,
+    fillOpacity: 0.8,
+    fillColor: "yellow"
+  };
 
   ngOnInit(): void {
     this.map = L.map('map', {
@@ -58,13 +77,14 @@ export class BasemapComponent implements OnInit {
       center: [10067355, 3112219],
       zoomControl: false,
       zoom: 0,
-      minZoom:-1
+      minZoom: -1,
+      doubleClickZoom: false
     });
-    var myIcon = L.divIcon({className: 'my-div-icon'});
+    var myIcon = L.divIcon({ className: 'my-div-icon' });
     this.cartesianData.loadData().subscribe((res) => {
       this.featureLayer = L.geoJSON(res, {
         pointToLayer: function (geoJsonPoint, latlng) {
-          return L.marker(latlng, {icon: myIcon});
+          return L.marker(latlng, { icon: myIcon });
         }
       }).bindPopup(function (layer: any) {
         return `
@@ -82,21 +102,39 @@ export class BasemapComponent implements OnInit {
         </tr>
         <tr>
            <td style="color: gray; padding: 3px">X:&nbsp</td>
-           <td style="padding: 3px">${layer.feature.properties.X} ft</td>
+           <td style="padding: 3px">${layer.feature.properties.X.toFixed(1)} ft</td>
         </tr>
         <tr>
           <td style="color: gray; padding: 3px">Y:&nbsp</td>
-          <td style="padding: 3px">${layer.feature.properties.Y} ft</td>
+          <td style="padding: 3px">${layer.feature.properties.Y.toFixed(1)} ft</td>
         </tr>   
      </table>
     `;
       }).addTo(this.map);
     })
 
+    this.pointsGroup.addTo(this.map)
+
+    this.map.on('dblclick', (e: any) => {
+      if (this.distanceMeasureing) {
+        this.distanceMeasureing = false
+        this.pointsGroup.clearLayers()
+        this.pLineGroup.removeFrom(this.map)
+        this.pLineGroup.clearLayers()
+        this.lineGroup = []
+        this.map.removeLayer(this.smallPolyline);
+        this.startingPoint = undefined
+        this.endingPoint = undefined
+        this.totalDistance = 0
+      }
+
+    })
+
     this.map.on('click', (e: any) => {
 
       if (this.locatingMap) {
         this.locatingMap = false
+        this.ImageAdded = true
         document.getElementById('map').style.cursor = 'default'
         this.imagePosition = {
           TL: L.latLng(e.latlng.lat + this.imageHeight / 20, e.latlng.lng - this.imageWidth / 20),
@@ -143,16 +181,31 @@ export class BasemapComponent implements OnInit {
           this.scaleImageActive = false
           this.pickOriginActive = false
         }
-      }
-      this.imagePositionFinal.TL = this.newTL
-      this.imagePositionFinal.TR = this.newTR
-      this.imagePositionFinal.BL = this.newBL
-      this.imagePositionFinal.C = this.newC
 
-      this.angleOnClick = this.rotationAngle(this.newC.lng, this.newC.lat, e.latlng.lng, e.latlng.lat)
+        if (this.distanceMeasureing) {
+          this.pointsGroup.addLayer(L.circleMarker(e.latlng, this.pointStyle))
+          this.lineGroup.push(e.latlng)
+          this.polyline = L.polyline(this.lineGroup, { color: 'gray', weight: 1 })
+          this.pLineGroup.addLayer(this.polyline)
+          this.pLineGroup.addTo(this.map)
+          this.DistancePopup(e.latlng)
+        }
+      }
+
+      if (this.ImageAdded) {
+
+        this.imagePositionFinal.TL = this.newTL
+        this.imagePositionFinal.TR = this.newTR
+        this.imagePositionFinal.BL = this.newBL
+        this.imagePositionFinal.C = this.newC
+
+        this.angleOnClick = this.rotationAngle(this.newC.lng, this.newC.lat, e.latlng.lng, e.latlng.lat)
+      }
     })
 
     this.map.on('mousemove', (e: any) => {
+
+
 
       if (this.rotateImageActive) {
         let angle = this.rotationAngle(this.newC.lng, this.newC.lat, e.latlng.lng, e.latlng.lat)
@@ -183,7 +236,7 @@ export class BasemapComponent implements OnInit {
 
         let minImageDimention = Math.min(Math.sqrt(Math.pow(this.imagePositionFinal.TR.lng - this.imagePositionFinal.TL.lng, 2) + Math.pow(this.imagePositionFinal.TR.lat - this.imagePositionFinal.TL.lat, 2)), Math.sqrt(Math.pow(this.imagePositionFinal.BL.lng - this.imagePositionFinal.TL.lng, 2) + Math.pow(this.imagePositionFinal.BL.lat - this.imagePositionFinal.TL.lat, 2)))
         let scaleRate = (Distance + minImageDimention) / minImageDimention
-        if (scaleRate<0){scaleRate=0}
+        if (scaleRate < 0) { scaleRate = 0 }
 
         this.newTL = L.latLng((this.imagePositionFinal.TL.lat - this.imagePositionFinal.C.lat) * scaleRate + this.imagePositionFinal.C.lat, (this.imagePositionFinal.TL.lng - this.imagePositionFinal.C.lng) * scaleRate + this.imagePositionFinal.C.lng)
         this.newTR = L.latLng((this.imagePositionFinal.TR.lat - this.imagePositionFinal.C.lat) * scaleRate + this.imagePositionFinal.C.lat, (this.imagePositionFinal.TR.lng - this.imagePositionFinal.C.lng) * scaleRate + this.imagePositionFinal.C.lng)
@@ -193,6 +246,46 @@ export class BasemapComponent implements OnInit {
       }
 
     })
+
+  }
+
+  DistancePopup(latlng: L.LatLng) {
+    if (this.smallPolyline) {
+      this.map.removeLayer(this.smallPolyline);
+    }
+
+    if (this.startingPoint == undefined) {
+      this.startingPoint = latlng
+    } else {
+      if (this.endingPoint == undefined) {
+        this.endingPoint = latlng
+      } else {
+        this.startingPoint = this.endingPoint
+        this.endingPoint = latlng
+      }
+      let distance = Math.sqrt(Math.pow(this.endingPoint.lat - this.startingPoint.lat, 2) + Math.pow(this.endingPoint.lng - this.startingPoint.lng, 2))
+      let angle = this.calculateAzimuth(this.startingPoint.lat, this.endingPoint.lat, this.startingPoint.lng, this.endingPoint.lng)
+      this.totalDistance += distance
+      this.smallPolyline = L.polyline([this.startingPoint, this.endingPoint], { color: 'gray', weight: 1 }).addTo(this.map).bindPopup(
+        `
+        <div>Distance: ${distance.toFixed(2).toString()} ft</div>
+        <div>Angle: ${angle.toFixed(1).toString()}&deg</div>
+        <div>Total Distance: ${this.totalDistance.toFixed(2).toString()}</div>
+        `
+      ).openPopup()
+
+    }
+
+  }
+
+  calculateAzimuth(latS: number, latE: number, lngS: number, lngE: number) {
+    if (latE > latS && lngE > lngS) {
+      return Math.atan((lngE - lngS) / (latE - latS)) * (180 / Math.PI)
+    } else if (latE < latS) {
+      return Math.atan((lngE - lngS) / (latE - latS)) * (180 / Math.PI) + 180
+    } else if (latE > latS && lngE < lngS) {
+      return Math.atan((lngE - lngS) / (latE - latS)) * (180 / Math.PI) + 360
+    }
 
   }
 
@@ -223,6 +316,10 @@ export class BasemapComponent implements OnInit {
     this.scaleImageActive = false
   }
 
+  distance() {
+    this.distanceMeasureing = true
+  }
+
   locate() {
     this.locatingMap = !this.locatingMap
     document.getElementById('map').style.cursor = 'crosshair'
@@ -244,7 +341,15 @@ export class BasemapComponent implements OnInit {
     }
   }
 
-
+  toggleEdit(e) {
+    this.featureLayer.eachLayer((layer: any) => {
+      if (e.target.checked) {
+        layer.dragging.enable()
+      } else {
+        layer.dragging.disable()
+      }
+    })
+  }
 
 
   //   X1,Y1 ---------------------------X3,Y3
