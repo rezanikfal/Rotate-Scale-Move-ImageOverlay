@@ -55,34 +55,43 @@ export class BasemapComponent implements OnInit {
   ngOnInit(): void {
     this.map = L.map('map', {
       crs: L.CRS.Simple,
-      center: [10067135, 3112219],
+      center: [10067355, 3112219],
       zoomControl: false,
-      zoom: 1,
+      zoom: 0,
+      minZoom:-1
     });
-
+    var myIcon = L.divIcon({className: 'my-div-icon'});
     this.cartesianData.loadData().subscribe((res) => {
       this.featureLayer = L.geoJSON(res, {
         pointToLayer: function (geoJsonPoint, latlng) {
-          return L.marker(latlng);
+          return L.marker(latlng, {icon: myIcon});
         }
+      }).bindPopup(function (layer: any) {
+        return `
+       <table style="border: 1px solid black; border-collapse: collapse;  border-spacing: 15px;">
+        <tr>
+           <th colspan=2 style="border: 1px solid black; background-color: #dcdcdc">Designed Layer</th>
+        </tr>
+        <tr>
+           <td style="color: gray; padding: 3px">Element Id:&nbsp</td>
+           <td style="padding: 3px">${layer.feature.properties.Id}</td>
+        </tr>
+        <tr>
+           <td style="color: gray; padding: 3px">Property 1:&nbsp</td>
+           <td style="padding: 3px">${layer.feature.properties.Prop1}</td>
+        </tr>
+        <tr>
+           <td style="color: gray; padding: 3px">X:&nbsp</td>
+           <td style="padding: 3px">${layer.feature.properties.X} ft</td>
+        </tr>
+        <tr>
+          <td style="color: gray; padding: 3px">Y:&nbsp</td>
+          <td style="padding: 3px">${layer.feature.properties.Y} ft</td>
+        </tr>   
+     </table>
+    `;
       }).addTo(this.map);
     })
-
-    // latLng(Y, X) or (lat, lng)
-    // var bottomright = L.latLng(40, 60),
-    //   topright = L.latLng(60, 60),
-    //   bottomleft = L.latLng(40, 46);
-
-
-    // this.overlay = L.imageOverlay.rotated("../../assets/images/sample.jpg", this.imagePosition.TL, this.imagePosition.TR, this.imagePosition.BL, {
-    //   interactive: true
-    // }).addTo(this.map);
-
-    var myIcon = L.divIcon({ className: 'my-div-icon' });
-    L.marker([40, 60], { icon: myIcon }).addTo(this.map);
-    L.marker([60, 60], { icon: myIcon }).addTo(this.map);
-    L.marker([40, 46], { icon: myIcon }).addTo(this.map);
-
 
     this.map.on('click', (e: any) => {
 
@@ -169,13 +178,16 @@ export class BasemapComponent implements OnInit {
       }
 
       if (this.scaleImageActive) {
-        let Distance = Math.sqrt(Math.pow(e.latlng.lng - this.scaleStart.lng, 2) + Math.pow(e.latlng.lat - this.scaleStart.lat, 2))
-        let minImageDimention = Math.min(Math.sqrt(Math.pow(this.imagePositionFinal.TR.lng - this.imagePositionFinal.TL.lng, 2) + Math.pow(this.imagePositionFinal.TR.lat - this.imagePositionFinal.TL.lat, 2)), Math.sqrt(Math.pow(this.imagePositionFinal.BL.lng - this.imagePositionFinal.TL.lng, 2) + Math.pow(this.imagePositionFinal.BL.lat - this.imagePositionFinal.TL.lat, 2)))
-        let scalerate = 2 * Distance / minImageDimention
+        // let Distance = Math.sqrt(Math.pow(e.latlng.lng - this.scaleStart.lng, 2) + Math.pow(e.latlng.lat - this.scaleStart.lat, 2))
+        let Distance = e.latlng.lat - this.scaleStart.lat
 
-        this.newTL = L.latLng((this.imagePositionFinal.TL.lat - this.imagePositionFinal.C.lat) * scalerate + this.imagePositionFinal.C.lat, (this.imagePositionFinal.TL.lng - this.imagePositionFinal.C.lng) * scalerate + this.imagePositionFinal.C.lng)
-        this.newTR = L.latLng((this.imagePositionFinal.TR.lat - this.imagePositionFinal.C.lat) * scalerate + this.imagePositionFinal.C.lat, (this.imagePositionFinal.TR.lng - this.imagePositionFinal.C.lng) * scalerate + this.imagePositionFinal.C.lng)
-        this.newBL = L.latLng((this.imagePositionFinal.BL.lat - this.imagePositionFinal.C.lat) * scalerate + this.imagePositionFinal.C.lat, (this.imagePositionFinal.BL.lng - this.imagePositionFinal.C.lng) * scalerate + this.imagePositionFinal.C.lng)
+        let minImageDimention = Math.min(Math.sqrt(Math.pow(this.imagePositionFinal.TR.lng - this.imagePositionFinal.TL.lng, 2) + Math.pow(this.imagePositionFinal.TR.lat - this.imagePositionFinal.TL.lat, 2)), Math.sqrt(Math.pow(this.imagePositionFinal.BL.lng - this.imagePositionFinal.TL.lng, 2) + Math.pow(this.imagePositionFinal.BL.lat - this.imagePositionFinal.TL.lat, 2)))
+        let scaleRate = (Distance + minImageDimention) / minImageDimention
+        if (scaleRate<0){scaleRate=0}
+
+        this.newTL = L.latLng((this.imagePositionFinal.TL.lat - this.imagePositionFinal.C.lat) * scaleRate + this.imagePositionFinal.C.lat, (this.imagePositionFinal.TL.lng - this.imagePositionFinal.C.lng) * scaleRate + this.imagePositionFinal.C.lng)
+        this.newTR = L.latLng((this.imagePositionFinal.TR.lat - this.imagePositionFinal.C.lat) * scaleRate + this.imagePositionFinal.C.lat, (this.imagePositionFinal.TR.lng - this.imagePositionFinal.C.lng) * scaleRate + this.imagePositionFinal.C.lng)
+        this.newBL = L.latLng((this.imagePositionFinal.BL.lat - this.imagePositionFinal.C.lat) * scaleRate + this.imagePositionFinal.C.lat, (this.imagePositionFinal.BL.lng - this.imagePositionFinal.C.lng) * scaleRate + this.imagePositionFinal.C.lng)
         this.overlay.reposition(L.latLng(this.newTL.lat, this.newTL.lng), L.latLng(this.newTR.lat, this.newTR.lng), L.latLng(this.newBL.lat, this.newBL.lng));
 
       }
