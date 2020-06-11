@@ -61,6 +61,8 @@ export class BasemapComponent implements OnInit {
   startingPoint: L.LatLng
   endingPoint: L.LatLng
   totalDistance = 0
+  featurePopup: L.Popup
+  currentUnit: string = 'ft'
 
   pointStyle = {
     radius: 3,
@@ -86,7 +88,7 @@ export class BasemapComponent implements OnInit {
         pointToLayer: function (geoJsonPoint, latlng) {
           return L.marker(latlng, { icon: myIcon });
         }
-      }).bindPopup(function (layer: any) {
+      }).bindPopup((layer: any) => {
         return `
        <table style="border: 1px solid black; border-collapse: collapse;  border-spacing: 15px;">
         <tr>
@@ -102,14 +104,14 @@ export class BasemapComponent implements OnInit {
         </tr>
         <tr>
            <td style="color: gray; padding: 3px">X:&nbsp</td>
-           <td style="padding: 3px">${layer.feature.properties.X.toFixed(1)} ft</td>
+           <td style="padding: 3px">${layer.feature.properties.X.toFixed(1)} ${this.currentUnit}</td>
         </tr>
         <tr>
           <td style="color: gray; padding: 3px">Y:&nbsp</td>
-          <td style="padding: 3px">${layer.feature.properties.Y.toFixed(1)} ft</td>
+          <td style="padding: 3px">${layer.feature.properties.Y.toFixed(1)} ${this.currentUnit}</td>
         </tr>   
      </table>
-    `;
+    `
       }).addTo(this.map);
     })
 
@@ -126,6 +128,7 @@ export class BasemapComponent implements OnInit {
         this.startingPoint = undefined
         this.endingPoint = undefined
         this.totalDistance = 0
+        this.featureLayer.bindPopup(this.featurePopup)
       }
 
     })
@@ -187,6 +190,7 @@ export class BasemapComponent implements OnInit {
           this.lineGroup.push(e.latlng)
           this.polyline = L.polyline(this.lineGroup, { color: 'gray', weight: 1 })
           this.pLineGroup.addLayer(this.polyline)
+          this.pLineGroup.setZIndex(1000)
           this.pLineGroup.addTo(this.map)
           this.DistancePopup(e.latlng)
         }
@@ -268,7 +272,7 @@ export class BasemapComponent implements OnInit {
       this.totalDistance += distance
       this.smallPolyline = L.polyline([this.startingPoint, this.endingPoint], { color: 'gray', weight: 1 }).addTo(this.map).bindPopup(
         `
-        <div>Distance: ${distance.toFixed(2).toString()} ft</div>
+        <div>Distance: ${distance.toFixed(2).toString()} ${this.currentUnit}</div>
         <div>Angle: ${angle.toFixed(1).toString()}&deg</div>
         <div>Total Distance: ${this.totalDistance.toFixed(2).toString()}</div>
         `
@@ -318,11 +322,17 @@ export class BasemapComponent implements OnInit {
 
   distance() {
     this.distanceMeasureing = true
+    this.featurePopup = this.featureLayer.getPopup()
+    this.featureLayer.unbindPopup()
   }
 
   locate() {
     this.locatingMap = !this.locatingMap
     document.getElementById('map').style.cursor = 'crosshair'
+  }
+
+  changeUnit(e: { target: { value: string } }) {
+    this.currentUnit = e.target.value
   }
 
   LoadImage(e) {

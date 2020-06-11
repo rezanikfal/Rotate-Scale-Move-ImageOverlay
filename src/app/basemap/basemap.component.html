@@ -1,11 +1,19 @@
 <div class="panel">
     <h4 style="margin-left: 10px;">Feature Layer</h4>
     <div style="text-align: left; margin-left: 10px; margin-bottom: 10px;">
-        <input type="checkbox" id="imgEdit"  (change)='toggleEdit($event)'>
+        <input type="checkbox" id="imgEdit" (change)='toggleEdit($event)'>
         <label for="imgEdit" style="font-size: 15px;">Edit Features</label><br>
     </div>
     <div style="text-align: left; margin-left: 10px;">
         <button class="btnImage" (click)="distance()">Distance Calculator</button>
+    </div>
+    <div style="text-align: left; margin-left: 10px;">
+        Map unit:
+        <select class="btnImage" (change)='changeUnit($event)'>
+            <option value="ft">foot</option>
+            <option value="m">meter</option>
+            <option value="">unknown</option>
+        </select>
     </div>
     <h4 style="margin-left: 10px;">Image Overlay</h4>
     <div style="text-align: left; margin-left: 15px; margin-bottom: 5px;">
